@@ -3,88 +3,63 @@ from argparse import ArgumentParser
 import cv2
 import os
 import numpy as np
-from utils.sinus import remove_sinus
+from utils.sinus import remove_sinus, auto_remove_sinus
 from utils.enhance_contrast import gamma_correction
+from utils.watershed import watershed_selective_contours
+from utils.logging import logging_step, logging_contours
+from utils.brightness import check_reduce_brightness, reduce_brightness
+from settings import settings
 
-
-@dataclass
-class Setting:
-    DEBUG_SHOW: int = 0
-    DEBUG_SAVE_IMG: int = 1
-    DEBUG_COUNT_OBJ: int = 1
-    LOG_DIRS: str = "logs"
-    step: int = 0
-
-
-settings = Setting()
-
-
-def logging_step(img, message: str = "", file_name: str = ""):
-    settings.step += 1
-
-    if settings.DEBUG_SHOW:
-        cv2.imshow(message, img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-    if settings.DEBUG_SAVE_IMG:
-        if file_name:
-            log_dir = f"{settings.LOG_DIRS}/{file_name}"
-        else:
-            log_dir = settings.LOG_DIRS
-
-        os.makedirs(log_dir, exist_ok=True)
-
-        cv2.imwrite(f"{log_dir}/{settings.step}.{message}.png", img)
 
 
 def preprocess(img, file_name: str = ""):
     # convert image to gray scale:
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     logging_step(img, "grayscale", file_name)
-    print("------------------------")
-    print(f"grayscale: {obj_counter(img)}")
 
-    # enhance_contrast
-    img = gamma_correction(img)
-    logging_step(img, "enhance contrast", file_name)
-    print("------------------------")
-    print(f"enhance contrast: {obj_counter(img)}")
-
-    # remove salt & pepper noise
-    img = cv2.medianBlur(img, 3)
-    logging_step(img, "remove salt and pepper", file_name)
-    print("------------------------")
-    print(f"remove salt and pepper: {obj_counter(img)}")
 
     # # remove sinus noise
-    # img = remove_sinus(img)
-    # logging_step(img, "remove sinus", file_name)
+    img = auto_remove_sinus(img, file_name=file_name)
+    logging_step(img, "remove sinus", file_name)
 
+
+    img = cv2.medianBlur(img, 3)
+    logging_step(img, "remove salt and pepper", file_name)
+
+    # enhance_contrast
+    img = gamma_correction(img, gamma=0.2)
+    logging_step(img, "enhance contrast", file_name)
+
+    # remove salt & pepper noise
     return img
 
 
 def obj_counter(img, root_img=None, file_name: str = ""):
     # 1. Convert to binary img
     _, binary_img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    logging_step(binary_img, "binary img", file_name)
+
+    # Local Adaptive Thresholding
+    binary_img = cv2.adaptiveThreshold(binary_img, 255.0, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 51, -20.0)
+    logging_step(binary_img, "local adaptive", file_name)
+
 
     # 2. xử lý hình thái học
     kernel = np.ones((3, 3), np.uint8)
     binary_img = cv2.morphologyEx(binary_img, cv2.MORPH_OPEN, kernel, iterations=2)
-
-    logging_step(binary_img, "binary img", file_name)
+    logging_step(binary_img, "morpology", file_name)
 
     # 3 get contours of objects
     contours, _ = cv2.findContours(binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = watershed_selective_contours(binary_img, contours, root_img=root_img.copy())
 
     # 3. remove min object
-    min_area = 50  # tùy chỉnh theo ảnh
+    min_area = settings.MIN_AREA  # tùy chỉnh theo ảnh
     obj_contours = [c for c in contours if cv2.contourArea(c) > min_area]
 
+
     if file_name:
-        img_results = root_img.copy()
-        cv2.drawContours(img_results, obj_contours, -1, (0, 255, 0), 2)
-        logging_step(img_results, "image results", file_name)
+        logging_contours(root_img, obj_contours, file_name=file_name)
 
     n_objects = len(obj_contours)
     print("Số lượng hạt gạo:", n_objects)
