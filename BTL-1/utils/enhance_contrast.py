@@ -1,15 +1,32 @@
-import cv2
 import numpy as np
 
 
-def enhance_contrast(img, method="clahe"):
-    if method == "hist_eq":
-        return cv2.equalizeHist(img)
-    elif method == "clahe":
-        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-        return clahe.apply(img)
-    elif method == "gamma":
-        gamma = 1.5
-        return np.array(255*(img/255.0)**(1/gamma), dtype='uint8')
-    else:
-        raise ValueError("Unknown method")
+def get_gamma(img) -> float:
+    std: float = img.std()
+    mean: float = img.mean()
+
+    if std > 40:
+        return 1
+
+    if std < 15 and mean < 15:
+        return 0.1
+
+    if std < 20 and mean < 20:
+        return 0.2
+
+    if std < 25 and mean < 25:
+        return 0.4
+
+    return 0.67
+
+
+def gamma_correction(img, gamma=None):
+    normalized = img / 255.0
+
+    if not gamma:
+        gamma = get_gamma(img)
+
+    corrected = np.power(normalized, gamma)
+    img = np.uint8(corrected * 255)
+    return img
+
