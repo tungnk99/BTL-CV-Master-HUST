@@ -59,7 +59,23 @@ def get_gamma(img) -> float:
     if std < 25 and mean < 25:
         return 0.4
 
-    return 0.67
+    if mean > 200 and std < 30:
+        return 4
+
+    if mean > 170 and std < 30:
+        return 2
+
+    if mean < 100:
+        return 0.8
+
+    elif mean < 150:
+        return 1.0
+
+    elif mean < 200:
+        return 1.2
+
+    else:
+        return 1.5
 
 
 def gamma_correction(img, gamma=None):
@@ -70,6 +86,8 @@ def gamma_correction(img, gamma=None):
 
     if not gamma:
         gamma = get_gamma(img)
+
+    print(mean, std, gamma)
     corrected = np.power(normalized, gamma)
     img = np.uint8(corrected * 255)
     logging(img, f"gamma_correction_{gamma}")

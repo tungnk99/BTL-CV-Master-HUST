@@ -107,8 +107,6 @@ def auto_remove_sinus(gray, r=5, thresh_ratio=2.5, file_name: str = ""):
         if x == ccol and y == crow:
             continue
 
-        print(x, y)
-
         # che điểm và điểm đối xứng
         cv2.circle(mask, (x, y), r, 0, -1)
         cv2.circle(mask, (cols - x, rows - y), r, 0, -1)

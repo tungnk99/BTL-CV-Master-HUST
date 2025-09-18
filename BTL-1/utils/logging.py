@@ -31,4 +31,4 @@ def logging_contours(root_img, contours, file_name="contours"):
     img_results = root_img.copy()
     cv2.drawContours(img_results, contours, -1, (0, 255, 0), 2)
     img_results = draw_index_contours(img_results, contours)
-    logging_step(img_results, "image results", file_name)
+    logging_step(img_results, "image_results", file_name)
