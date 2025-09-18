@@ -14,10 +14,19 @@ Chương trình của bạn phải trả về số lượng hạt gạo trong m�
 
 ### 1. Tiền xử lý ảnh
 Xử lý các nhiễu và làm mịn ảnh hưởng
-- Xử lý nhiễu muối tiêu
+1. Remove sinus trước. 
+   - Lý do xử lý sinus đầu tiên là do nếu thực hiện các xử lý khác trước có thể làm mất tính nhiễu sin dẫn tới lọc tín hiệu sinus khó hơn.
+   - Chuyển về miền tần số, tìm đó tìm tần số bị nhiễu từ đó loại bỏ các tần số nhiễu này đi và ngịch đảo lại về ảnh đa mức sáng
+2. Lọa bỏ nhiễu muối tiêu
+   - sử dụng medianBlur để loại bỏ nhiễu muối tiêu
+3. Tăng độ tương phản: 
+   - Sử dụng hiệu chỉnh gamma. Gamma sẽ được lựa chọn tinh chỉnh theo std và mean của ảnh.
 
 ### 2. Đếm số hạt gạo trong ảnh
-Có 3 giải pháp đếm số hạt gạo trong ảnh bao gồm:
-- Đếm số hạt gạo dựa trên đường bao của hạt gạo
-- Dếm số hạt gạo dựa trên vùng liên thông
-- Watershed: open/close ảnh trước khi đến, sau đón sử dụng watershed để tách các hạt dính vào nhau
+Ý tưởng: Chuyển ảnh về dạng nhị phân, sau đó sử dụng thuật toán tìm biên (contours) của hạt gạo từ đó đếm số hạt gạo dựa trên số biên
+1. Chuyển ảnh về ảnh nhị phân: Sử dụng otsu thesh
+2. xử lý hình thái học theo phương pháp open để xóa bỏ các vùng trắng nhiễu nhỏ
+3. tìm kiếm các vùng biên hạt gạo
+4. xử lý wateshed local trên từng vùng biên hạt gạo to bất thường để cố gắng tách các hạt gạo dính vào nhau
+5. loại bỏ các vùng biên hạt gạo nhiễu dựa trên diện tích trong contours
+6. Trả về kết quả số hạt gạo tương ứng với số contours

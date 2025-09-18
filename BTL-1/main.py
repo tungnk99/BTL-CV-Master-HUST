@@ -44,7 +44,7 @@ def obj_counter(img, root_img=None, file_name: str = ""):
     # 3 get contours of objects
     contours, _ = cv2.findContours(binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # 4. Separate contours stuck together
+    # 4. Separate contours stuck together on local
     contours = watershed_selective_contours(binary_img, contours, root_img=root_img.copy())
 
     # 5. remove min object
