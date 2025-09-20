@@ -30,3 +30,20 @@ Xử lý các nhiễu và làm mịn ảnh hưởng
 4. xử lý wateshed local trên từng vùng biên hạt gạo to bất thường để cố gắng tách các hạt gạo dính vào nhau
 5. loại bỏ các vùng biên hạt gạo nhiễu dựa trên diện tích trong contours
 6. Trả về kết quả số hạt gạo tương ứng với số contours
+
+
+## 3. Hướng dẫn chạy 
+- Install requirements:
+```commandline
+pip install -r requirements.txt
+```
+
+- Chạy đếm số hạt gạo
+```commandline
+python main.py -f "<img_path>"
+```
+
+Ví dụ:
+```commandline
+python main.py -f data/1_wIXlvBeAFtNVgJd49VObgQ.png
+```
